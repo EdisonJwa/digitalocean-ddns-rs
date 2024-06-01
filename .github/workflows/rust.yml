@@ -21,6 +21,7 @@ jobs:
         toolchain: stable
         components: rustfmt, clippy
     - run: cargo clippy
+    - run: apt-get update && apt-get install -y musl-tools pkg-config libssl-dev
     - name: Build
       run: cargo build --verbose
     - name: Run tests
