@@ -21,7 +21,8 @@ jobs:
         toolchain: stable
         components: rustfmt, clippy
     - run: cargo clippy
-    - run: apt-get update && apt-get install -y musl-tools pkg-config libssl-dev
+    - name: Install Requirements
+      run: sudo apt-get update && sudo apt-get install -y build-essential musl-tools pkg-config libssl-dev
     - name: Build
       run: cargo build --verbose
     - name: Run tests
@@ -133,5 +134,5 @@ jobs:
       - name: upload
         uses: actions/upload-artifact@v4
         with:
-          name: realm-${{ matrix.target }}
+          name: ddns-${{ matrix.target }}
           path: target/${{ matrix.target }}/release/edison-ddns-rs
