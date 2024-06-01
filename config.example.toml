@@ -1,0 +1,22 @@
+token = "TOKEN_HERE" # Your DigitalOcean API token (required)
+
+# Set up the records
+[records]
+
+[records.DDNS_A]
+type = "A" # A, AAAA (required)
+name = "www" # Subdomain (required)
+domain = "example.com" # Domain (required)
+ttl = 60 # TTL in seconds (default: 60, optional)
+interface = "eth0" # Only available on Linux (optional)
+
+[records.DDNS_AAAA]
+type = "AAAA"
+name = "www"
+domain = "example.com"
+
+[records.DDNS_AAAA_2] ## You can add multiple records and Custom names
+type = "AAAA" 
+name = "www"
+domain = "example.com"
+interface = "eth1"
