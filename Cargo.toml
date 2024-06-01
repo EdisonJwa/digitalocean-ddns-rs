@@ -1,11 +1,13 @@
 [package]
-name = "edison-ddns-rs"
-version = "0.1.0"
+name = "edison-ddns"
+version = "0.2.0"
 edition = "2021"
 authors = ["Edison Jwa<me@edison.network>"]
+description = "A simple DDNS client for dgon"
 
 
 [dependencies]
+clap = { version = "4.5.4", features = ["derive"] }
 hickory-resolver = "0.24.1"
 openssl-sys = { version = "0.9.102", features = ["vendored"] }
 reqwest = { version = "0.12", features = ["json"] }

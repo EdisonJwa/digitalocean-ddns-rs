@@ -5,11 +5,19 @@ use reqwest::Response;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::error::Error;
-use std::net::IpAddr;
-use std::net::Ipv4Addr;
+use std::net::{IpAddr, Ipv4Addr};
 use std::result::Result;
-
 use std::path::Path;
+use clap::Parser;
+
+// DigitalOcean Dynamic DNS Updater
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    // Set a custom config file
+    #[arg(short, long)]
+    config: Option<String>
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Config {
@@ -235,11 +243,18 @@ async fn check_ip(name: &str, domain: &str, is_v4: bool) -> Result<bool, Box<dyn
 
 #[tokio::main]
 async fn main() {
-    let config_file = "config.toml";
-    if !Path::new(config_file).exists() {
+
+    let args = Args::parse();
+
+    // if args.config.is_none() {
+    //     panic!("Config file not provided");
+    // }
+    let config_file = args.config.unwrap_or("config.toml".to_string());
+    if !Path::new(&config_file).exists() {
         panic!("Config file not found");
     }
 
+    
     let config: Config = toml::from_str(&std::fs::read_to_string(config_file).unwrap()).unwrap();
     for (name, record) in config.records.iter() {
         println!("Updating record: {}", name);
