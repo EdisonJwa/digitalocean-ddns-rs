@@ -18,14 +18,11 @@ jobs:
       with:
         toolchain: stable
         components: rustfmt, clippy
-    - run: cargo clippy
     - name: Install Requirements
       run: sudo apt-get update && sudo apt-get install -y build-essential musl-tools pkg-config libssl-dev
-    - name: Build
-      run: cargo build --verbose
+    - run: cargo clippy
     - name: Run tests
       run: cargo test --verbose
-
     - name: Cache cargo dependencies
       uses: actions/cache@v4
       with:
