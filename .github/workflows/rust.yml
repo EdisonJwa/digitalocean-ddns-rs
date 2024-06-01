@@ -73,14 +73,14 @@ jobs:
         if: "!contains(matrix.target, 'windows')"
         uses: actions/upload-artifact@v4
         with:
-          name: edison-ddns-rs-${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/edison-ddns-rs
+          name: edison-ddns-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/edison-ddns
       - name: upload windows binary
         if: "contains(matrix.target, 'windows')"
         uses: actions/upload-artifact@v4
         with:
-          name: edison-ddns-rs-${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/edison-ddns-rs.exe
+          name: edison-ddns-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/edison-ddns.exe
   build-windows:
     runs-on: windows-latest
     needs: build-check
@@ -100,8 +100,8 @@ jobs:
       - name: upload
         uses: actions/upload-artifact@v4
         with:
-          name: edison-ddns-rs-${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/edison-ddns-rs.exe
+          name: edison-ddns-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/edison-ddns.exe
   build-apple:
     runs-on: macos-latest
     needs: build-check
@@ -124,4 +124,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ddns-${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/edison-ddns-rs
+          path: target/${{ matrix.target }}/release/edison-ddns
