@@ -93,7 +93,7 @@ async fn get_v4_ip() -> Result<String, Box<dyn Error>> {
 async fn get_v4_ip_with_interface(interface: &Option<String>) -> Result<String, Box<dyn Error>> {
         
     let client = reqwest::Client::builder()
-        .interface(interface.unwrap().as_str())
+        .interface(interface.as_ref().map(|s| s.as_str()).unwrap())
         .build()
         .unwrap();
     let res = client
@@ -117,7 +117,7 @@ async fn get_v6_ip() -> Result<String, Box<dyn Error>> {
 #[cfg(any(target_os = "android", target_os = "fuchsia", target_os = "linux"))]
 async fn get_v6_ip_with_interface(interface: &Option<String>) -> Result<String, Box<dyn Error>> {
     let client = reqwest::Client::builder()
-        .interface(interface.unwrap().as_str())
+        .interface(interface.as_ref().map(|s| s.as_str()).unwrap())
         .build()
         .unwrap();
     let res = client
@@ -252,21 +252,25 @@ async fn main() {
             .unwrap();
         if record.type_ == "A" {
 
-            let mut v4_ip: Option<String> = None;
-            if cfg!(any(
-                target_os = "android",
-                target_os = "fuchsia",
-                target_os = "linux",
-            )) && Some(&record.interface) != None
-            {
-                #[cfg(any(target_os = "android", target_os = "fuchsia", target_os = "linux"))]
-                {
-                    v4_ip = Some(get_v4_ip_with_interface(&record.interface).await.unwrap());
+            let v4_ip: Option<String>;
+            if let Some(ref _interface) = &record.interface {
+                if cfg!(any(
+                    target_os = "android",
+                    target_os = "fuchsia",
+                    target_os = "linux",
+                )) {   
+                    #[cfg(any(target_os = "android", target_os = "fuchsia", target_os = "linux"))]
+                    {
+                        v4_ip = Some(get_v4_ip_with_interface(&record.interface).await.unwrap());
+                    }
+                } else {
+                    v4_ip = Some(get_v4_ip().await.unwrap());
                 }
             } else {
-                println!("SO_BINDTODEVICE is not supported on this platform");
+                println!("Not using interface");
                 v4_ip = Some(get_v4_ip().await.unwrap());
             }
+
 
             let data = RecordUpdateBody {
                 type_: record.type_.clone(),
@@ -292,19 +296,22 @@ async fn main() {
                 println!("IP is the same, skipping");
             }
         } else if record.type_ == "AAAA" {
-            let mut v6_ip: Option<String> = None;
-            if cfg!(any(
-                target_os = "android",
-                target_os = "fuchsia",
-                target_os = "linux",
-            )) && Some(&record.interface) != None
-            {
-                #[cfg(any(target_os = "android", target_os = "fuchsia", target_os = "linux"))]
-                {
-                    v6_ip = Some(get_v6_ip_with_interface(&record.interface).await.unwrap());
+            let v6_ip: Option<String>;
+            if let Some(ref _interface) = &record.interface {
+                if cfg!(any(
+                    target_os = "android",
+                    target_os = "fuchsia",
+                    target_os = "linux",
+                )) {   
+                    #[cfg(any(target_os = "android", target_os = "fuchsia", target_os = "linux"))]
+                    {
+                        v6_ip = Some(get_v6_ip_with_interface(&record.interface).await.unwrap());
+                    }
+                } else {
+                    println!("SO_BINDTODEVICE is not supported on this platform");
+                    v6_ip = Some(get_v6_ip().await.unwrap());
                 }
             } else {
-                println!("SO_BINDTODEVICE is not supported on this platform");
                 v6_ip = Some(get_v6_ip().await.unwrap());
             }
             let data = RecordUpdateBody {

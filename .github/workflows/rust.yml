@@ -10,10 +10,8 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-
+  build-check:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
     - uses: dtolnay/rust-toolchain@master
@@ -39,20 +37,9 @@ jobs:
           target/
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-    - name: Run cargo build
-      uses: actions-rs/cargo@v1
-      with:
-        use-cross: true
-        command: build
-        args: --release --target x86_64-unknown-linux-musl
-
-    - uses: actions/upload-artifact@v2
-      with:
-        name: edison-ddns-rs
-        path: target/x86_64-unknown-linux-musl/release/edison-ddns-rs
-
   build-linux:
     runs-on: ubuntu-20.04
+    needs: build-check
     strategy:
       matrix:
         target:
@@ -99,6 +86,7 @@ jobs:
           path: target/${{ matrix.target }}/release/edison-ddns-rs.exe
   build-windows:
     runs-on: windows-latest
+    needs: build-check
     strategy:
       matrix:
         target:
@@ -119,6 +107,7 @@ jobs:
           path: target/${{ matrix.target }}/release/edison-ddns-rs.exe
   build-apple:
     runs-on: macos-latest
+    needs: build-check
     strategy:
       matrix:
         target:
