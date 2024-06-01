@@ -1,0 +1,136 @@
+name: Rust
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: stable
+        components: rustfmt, clippy
+    - run: cargo clippy
+    - name: Build
+      run: cargo build --verbose
+    - name: Run tests
+      run: cargo test --verbose
+
+    - name: Cache cargo dependencies
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Run cargo build
+      uses: actions-rs/cargo@v1
+      with:
+        use-cross: true
+        command: build
+        args: --release --target x86_64-unknown-linux-musl
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: realm
+        path: target/x86_64-unknown-linux-musl/release/edison-ddns-rs
+
+  build-corss:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        target:
+          - x86_64-unknown-linux-gnu
+          - x86_64-unknown-linux-musl
+          - x86_64-pc-windows-gnu
+          - x86_64-linux-android
+          - aarch64-unknown-linux-gnu
+          - aarch64-unknown-linux-musl
+          - aarch64-linux-android
+          - arm-unknown-linux-gnueabi
+          - arm-unknown-linux-gnueabihf
+          - arm-unknown-linux-musleabi
+          - arm-unknown-linux-musleabihf
+          - armv7-unknown-linux-gnueabi
+          - armv7-unknown-linux-gnueabihf
+          - armv7-unknown-linux-musleabi
+          - armv7-unknown-linux-musleabihf
+    steps:
+      - uses: actions/checkout@v4
+      - name: install toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+            toolchain: stable
+            targets: ${{ matrix.target }}
+      - name: install cross
+        run: cargo install cross --git https://github.com/cross-rs/cross
+      - name: compile
+        run: cross build --release --target=${{ matrix.target }}
+      - name: upload unix binary
+        if: "!contains(matrix.target, 'windows')"
+        uses: actions/upload-artifact@v4
+        with:
+          name: realm-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/edison-ddns-rs
+      - name: upload windows binary
+        if: "contains(matrix.target, 'windows')"
+        uses: actions/upload-artifact@v4
+        with:
+          name: realm-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/edison-ddns-rs.exe
+  build-windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        target:
+          - x86_64-pc-windows-msvc
+    steps:
+      - uses: actions/checkout@v4
+      - name: install toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+            toolchain: nightly
+            targets: ${{ matrix.target }}
+      - name: compile
+        run: cargo build --release --target=${{ matrix.target }}
+      - name: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: realm-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/edison-ddns-rs.exe
+  build-apple:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        target:
+          - x86_64-apple-darwin
+          - aarch64-apple-darwin
+          - aarch64-apple-ios
+    steps:
+      - uses: actions/checkout@v4
+      - name: install toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+            toolchain: nightly
+            targets: ${{ matrix.target }}
+      - name: compile
+        run: cargo build --release --target=${{ matrix.target }}
+      - name: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: realm-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/edison-ddns-rs
