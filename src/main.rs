@@ -339,7 +339,6 @@ async fn main() {
             if !is_same_ip {
                 let res = update_record(record_id, &record.domain, data, &config.token).await;
                 if res.status().is_success() {
-                    println!("{:?}", res.text().await.unwrap());
                     println!("Record updated");
                 } else {
                     panic!("Failed to update record\n{:?}", res.text().await.unwrap());
