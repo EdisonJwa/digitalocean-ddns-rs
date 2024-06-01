@@ -86,7 +86,7 @@ async fn get_v4_ip() -> Result<String, Box<dyn Error>> {
         .await?
         .text()
         .await?;
-    return Ok(res);
+    Ok(res)
 }
 
 #[cfg(any(target_os = "android", target_os = "fuchsia", target_os = "linux"))]
@@ -103,7 +103,7 @@ async fn get_v4_ip_with_interface(interface: &Option<String>) -> Result<String, 
         .text()
         .await?;
 
-    return Ok(res);
+    Ok(res)
 }
 
 async fn get_v6_ip() -> Result<String, Box<dyn Error>> {
@@ -111,7 +111,7 @@ async fn get_v6_ip() -> Result<String, Box<dyn Error>> {
         .await?
         .text()
         .await?;
-    return Ok(res);
+    Ok(res)
 }
 
 #[cfg(any(target_os = "android", target_os = "fuchsia", target_os = "linux"))]
@@ -126,8 +126,7 @@ async fn get_v6_ip_with_interface(interface: &Option<String>) -> Result<String, 
         .await?
         .text()
         .await?;
-
-    return Ok(res);
+    Ok(res)
 }
 
 async fn get_record_resolved_ip(
@@ -147,11 +146,11 @@ async fn get_record_resolved_ip(
     if is_v4 {
         let res = resolver.ipv4_lookup(domain_to_resolve).await?;
         let ips: Vec<IpAddr> = res.iter().map(|rdata| IpAddr::V4(rdata.0)).collect();
-        return Ok(ips);
+        Ok(ips)
     } else {
         let res = resolver.ipv6_lookup(domain_to_resolve).await?;
         let ips: Vec<IpAddr> = res.iter().map(|rdata| IpAddr::V6(rdata.0)).collect();
-        return Ok(ips);
+        Ok(ips)
     }
 }
 
@@ -161,7 +160,7 @@ async fn get_record_id(
     domain: &str,
     type_: &str,
 ) -> Result<u64, Box<dyn Error>> {
-    let res = get_records(&token, &domain, &name, &type_).await;
+    let res = get_records(token, domain, name, type_).await;
     if !res.status().is_success() {
         let error_data = res.json::<ErrResponse>().await.unwrap();
         panic!("{}", format!("{}: {}", error_data.id, error_data.message));
@@ -173,7 +172,7 @@ async fn get_record_id(
             return Ok(record.id);
         }
     }
-    return Err("Record not found".into());
+    Err("Record not found".into())
 }
 
 async fn get_records(token: &str, domain: &str, name: &str, type_: &str) -> Response {
@@ -193,7 +192,7 @@ async fn get_records(token: &str, domain: &str, name: &str, type_: &str) -> Resp
         .await
         .unwrap();
 
-    return res;
+    res
 }
 
 async fn update_record(id: u64, domain: &str, data: RecordUpdateBody, token: &str) -> Response {
@@ -215,7 +214,7 @@ async fn update_record(id: u64, domain: &str, data: RecordUpdateBody, token: &st
         .await
         .unwrap();
 
-    return res;
+    res
 }
 
 async fn check_ip(name: &str, domain: &str, is_v4: bool) -> Result<bool, Box<dyn Error>> {
@@ -225,16 +224,16 @@ async fn check_ip(name: &str, domain: &str, is_v4: bool) -> Result<bool, Box<dyn
     } else {
         get_v6_ip().await?
     };
-    print!("Current IP: {}\n", current_ip);
+    println!("Current IP: {}", current_ip);
     for ip in &record_ips {
-        print!("Record IP: {}\n", ip);
+        println!("Record IP: {}", ip);
     }
     for ip in record_ips {
         if ip.to_string() == current_ip {
             return Ok(true);
         }
     }
-    return Ok(false);
+    Ok(false)
 }
 
 #[tokio::main]
