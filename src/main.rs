@@ -182,7 +182,7 @@ async fn get_records(token: &str, domain: &str, name: &str, type_: &str) -> Resp
         AUTHORIZATION,
         HeaderValue::from_str(&("Bearer ".to_owned() + token)).unwrap(),
     );
-    let res = reqwest::Client::new()
+    reqwest::Client::new()
         .get(&format!(
             "https://api.digitalocean.com/v2/domains/{}/records/?name={}.{}&type={}&per_page=200",
             domain, name, domain, type_
@@ -190,9 +190,8 @@ async fn get_records(token: &str, domain: &str, name: &str, type_: &str) -> Resp
         .headers(headers)
         .send()
         .await
-        .unwrap();
+        .unwrap()
 
-    res
 }
 
 async fn update_record(id: u64, domain: &str, data: RecordUpdateBody, token: &str) -> Response {
@@ -206,15 +205,13 @@ async fn update_record(id: u64, domain: &str, data: RecordUpdateBody, token: &st
         AUTHORIZATION,
         HeaderValue::from_str(&("Bearer ".to_owned() + token)).unwrap(),
     );
-    let res = reqwest::Client::new()
+    reqwest::Client::new()
         .patch(&url)
         .headers(headers)
         .json(&data)
         .send()
         .await
-        .unwrap();
-
-    res
+        .unwrap()
 }
 
 async fn check_ip(name: &str, domain: &str, is_v4: bool) -> Result<bool, Box<dyn Error>> {
@@ -266,7 +263,6 @@ async fn main() {
                     v4_ip = Some(get_v4_ip().await.unwrap());
                 }
             } else {
-                println!("Not using interface");
                 v4_ip = Some(get_v4_ip().await.unwrap());
             }
 
@@ -340,5 +336,4 @@ async fn main() {
             panic!("Invalid record type");
         }
     }
-    println!("Done")
 }
