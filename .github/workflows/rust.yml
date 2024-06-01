@@ -48,7 +48,7 @@ jobs:
 
     - uses: actions/upload-artifact@v2
       with:
-        name: realm
+        name: edison-ddns-rs
         path: target/x86_64-unknown-linux-musl/release/edison-ddns-rs
 
   build-corss:
@@ -86,13 +86,13 @@ jobs:
         if: "!contains(matrix.target, 'windows')"
         uses: actions/upload-artifact@v4
         with:
-          name: realm-${{ matrix.target }}
+          name: edison-ddns-rs-${{ matrix.target }}
           path: target/${{ matrix.target }}/release/edison-ddns-rs
       - name: upload windows binary
         if: "contains(matrix.target, 'windows')"
         uses: actions/upload-artifact@v4
         with:
-          name: realm-${{ matrix.target }}
+          name: edison-ddns-rs-${{ matrix.target }}
           path: target/${{ matrix.target }}/release/edison-ddns-rs.exe
   build-windows:
     runs-on: windows-latest
@@ -112,7 +112,7 @@ jobs:
       - name: upload
         uses: actions/upload-artifact@v4
         with:
-          name: realm-${{ matrix.target }}
+          name: edison-ddns-rs-${{ matrix.target }}
           path: target/${{ matrix.target }}/release/edison-ddns-rs.exe
   build-apple:
     runs-on: macos-latest
