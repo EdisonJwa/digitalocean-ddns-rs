@@ -51,7 +51,7 @@ jobs:
         name: edison-ddns-rs
         path: target/x86_64-unknown-linux-musl/release/edison-ddns-rs
 
-  build-corss:
+  build-linux:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
@@ -80,6 +80,9 @@ jobs:
             targets: ${{ matrix.target }}
       - name: install cross
         run: cargo install cross --git https://github.com/cross-rs/cross
+      - name: Install Requirements
+        if: "!contains(matrix.target, 'windows')"
+        run: sudo apt-get update && sudo apt-get install -y build-essential musl-tools pkg-config libssl-dev
       - name: compile
         run: cross build --release --target=${{ matrix.target }}
       - name: upload unix binary
