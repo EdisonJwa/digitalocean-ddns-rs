@@ -252,7 +252,7 @@ async fn main() {
             .unwrap();
         if record.type_ == "A" {
 
-            let v4_ip: Option<String>;
+            let mut v4_ip: Option<String> = None;
             if let Some(ref _interface) = &record.interface {
                 if cfg!(any(
                     target_os = "android",
@@ -296,7 +296,7 @@ async fn main() {
                 println!("IP is the same, skipping");
             }
         } else if record.type_ == "AAAA" {
-            let v6_ip: Option<String>;
+            let mut v6_ip: Option<String> = None;
             if let Some(ref _interface) = &record.interface {
                 if cfg!(any(
                     target_os = "android",
