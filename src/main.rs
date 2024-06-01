@@ -93,7 +93,7 @@ async fn get_v4_ip() -> Result<String, Box<dyn Error>> {
 async fn get_v4_ip_with_interface(interface: &Option<String>) -> Result<String, Box<dyn Error>> {
         
     let client = reqwest::Client::builder()
-        .interface(interface.as_ref().unwrap())
+        .interface(interface.unwrap())
         .build()
         .unwrap();
     let res = client
@@ -117,7 +117,7 @@ async fn get_v6_ip() -> Result<String, Box<dyn Error>> {
 #[cfg(any(target_os = "android", target_os = "fuchsia", target_os = "linux"))]
 async fn get_v6_ip_with_interface(interface: &Option<String>) -> Result<String, Box<dyn Error>> {
     let client = reqwest::Client::builder()
-        .interface(interface.as_ref().unwrap())
+        .interface(interface.unwrap().parse().unwrap())
         .build()
         .unwrap();
     let res = client
