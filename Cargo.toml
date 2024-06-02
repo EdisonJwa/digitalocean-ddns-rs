@@ -1,6 +1,6 @@
 [package]
 name = "edison-ddns"
-version = "0.2.1"
+version = "0.3.0"
 edition = "2021"
 authors = ["Edison Jwa<me@edison.network>"]
 description = "A simple DDNS client for dgon"

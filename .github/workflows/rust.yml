@@ -81,6 +81,34 @@ jobs:
         with:
           name: edison-ddns-${{ matrix.target }}
           path: target/${{ matrix.target }}/release/edison-ddns.exe
+      - name: pack unix binary
+        if: "!contains(matrix.target, 'windows')"
+        run: |
+          mkdir -p release-${{ matrix.target }}
+          cd release-${{ matrix.target }}
+          tar -C ../target/${{ matrix.target }}/release -zcf release-${{ matrix.target }}.tar.gz edison-ddns
+      - name: pack windows binary
+        if: "contains(matrix.target, 'windows')"
+        run: |
+          mkdir -p release-${{ matrix.target }}
+          cd release-${{ matrix.target }}
+          tar -C ../target/${{ matrix.target }}/release -zcf release-${{ matrix.target }}.tar.gz edison-ddns.exe
+      - name: add signature
+        run: |
+          cd release-${{ matrix.target }}
+          sha256sum release-${{ matrix.target }}.tar.gz > release-${{ matrix.target }}.sha256
+
+      - name: Push snapshot package
+        uses: "marvinpinto/action-automatic-releases@latest"
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "snapshot"
+          prerelease: false
+          title: github.event.head_commit.message
+          files: |
+            release-${{ matrix.target }}/*
+          
   build-windows:
     runs-on: windows-latest
     needs: build-check
@@ -102,6 +130,24 @@ jobs:
         with:
           name: edison-ddns-${{ matrix.target }}
           path: target/${{ matrix.target }}/release/edison-ddns.exe
+      - name: pack
+        run: |
+          mkdir -p release-${{ matrix.target }}
+          cd release-${{ matrix.target }}
+          tar -C ../target/${{ matrix.target }}/release/ -zcf edison-ddns-${{ matrix.target }}.tar.gz edison-ddns.exe
+          openssl dgst -sha256 -r edison-ddns-${{ matrix.target }}.tar.gz > edison-ddns-${{ matrix.target }}.sha256
+
+      - name: Push snapshot package
+        uses: "marvinpinto/action-automatic-releases@latest"
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "snapshot"
+          prerelease: false
+          title: github.event.head_commit.message
+          files: |
+            release-${{ matrix.target }}/*
+
   build-apple:
     runs-on: macos-latest
     needs: build-check
@@ -125,3 +171,21 @@ jobs:
         with:
           name: ddns-${{ matrix.target }}
           path: target/${{ matrix.target }}/release/edison-ddns
+
+      - name: pack
+        run: |
+          mkdir -p release-${{ matrix.target }}
+          cd release-${{ matrix.target }}
+          tar -C ../target/${{ matrix.target }}/release/ -zcf realm-${{ matrix.target }}.tar.gz realm
+          shasum -a 256 realm-${{ matrix.target }}.tar.gz > realm-${{ matrix.target }}.sha256
+
+      - name: Push snapshot package
+        uses: "marvinpinto/action-automatic-releases@latest"
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "snapshot"
+          prerelease: false
+          title: github.event.head_commit.message
+          files: |
+            release-${{ matrix.target }}/*
