@@ -97,32 +97,6 @@ jobs:
         run: |
           cd release-${{ matrix.target }}
           sha256sum release-${{ matrix.target }}.tar.gz > release-${{ matrix.target }}.sha256
-
-      - name: Check for tag
-        id: check_tag
-        run: |
-          if [ -z "${GITHUB_REF##*/}" ]; then
-            echo "::set-output name=tag::none"
-          else
-            echo "::set-output name=tag::${GITHUB_REF##*/}"
-          fi
-
-      - name: Set release type
-        id: set_release_type
-        run: |
-          if [ "${{ steps.check_tag.outputs.tag }}" == "none" ]; then
-            echo "::set-output name=release_type::prerelease"
-          else
-            echo "::set-output name=release_type::release"
-          fi
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          files: release-${{ matrix.target }}/*
-          prerelease: ${{ steps.set_release_type.outputs.release_type == 'prerelease' }}
           
   build-windows:
     runs-on: windows-latest
@@ -151,32 +125,6 @@ jobs:
           cd release-${{ matrix.target }}
           tar -C ../target/${{ matrix.target }}/release/ -zcf release-${{ matrix.target }}.tar.gz edison-ddns.exe
           openssl dgst -sha256 -r release-${{ matrix.target }}.tar.gz > release-${{ matrix.target }}.sha256
-
-      - name: Check for tag
-        id: check_tag
-        run: |
-          if [ -z "${GITHUB_REF##*/}" ]; then
-            echo "::set-output name=tag::none"
-          else
-            echo "::set-output name=tag::${GITHUB_REF##*/}"
-          fi
-
-      - name: Set release type
-        id: set_release_type
-        run: |
-          if [ "${{ steps.check_tag.outputs.tag }}" == "none" ]; then
-            echo "::set-output name=release_type::prerelease"
-          else
-            echo "::set-output name=release_type::release"
-          fi
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          files: release-${{ matrix.target }}/*
-          prerelease: ${{ steps.set_release_type.outputs.release_type == 'prerelease' }}
 
   build-apple:
     runs-on: macos-latest
@@ -208,29 +156,3 @@ jobs:
           cd release-${{ matrix.target }}
           tar -C ../target/${{ matrix.target }}/release/ -zcf release-${{ matrix.target }}.tar.gz edison-ddns
           shasum -a 256 release-${{ matrix.target }}.tar.gz > release-${{ matrix.target }}.sha256
-
-      - name: Check for tag
-        id: check_tag
-        run: |
-          if [ -z "${GITHUB_REF##*/}" ]; then
-            echo "::set-output name=tag::none"
-          else
-            echo "::set-output name=tag::${GITHUB_REF##*/}"
-          fi
-
-      - name: Set release type
-        id: set_release_type
-        run: |
-          if [ "${{ steps.check_tag.outputs.tag }}" == "none" ]; then
-            echo "::set-output name=release_type::prerelease"
-          else
-            echo "::set-output name=release_type::release"
-          fi
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          files: release-${{ matrix.target }}/*
-          prerelease: ${{ steps.set_release_type.outputs.release_type == 'prerelease' }}
