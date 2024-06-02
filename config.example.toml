@@ -9,6 +9,7 @@ name = "www" # Subdomain (required)
 domain = "example.com" # Domain (required)
 ttl = 60 # TTL in seconds (default: 60, optional)
 interface = "eth0" # Only available on Linux (optional)
+use_cn_dns = false # Use Ali-DNS (default: false, optional)
 
 [records.DDNS_AAAA]
 type = "AAAA"

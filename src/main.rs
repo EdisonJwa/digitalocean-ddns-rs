@@ -1,3 +1,4 @@
+use clap::Parser;
 use hickory_resolver::config::*;
 use hickory_resolver::TokioAsyncResolver;
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
@@ -6,9 +7,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::error::Error;
 use std::net::{IpAddr, Ipv4Addr};
-use std::result::Result;
 use std::path::Path;
-use clap::Parser;
+use std::result::Result;
 
 // DigitalOcean Dynamic DNS Updater
 #[derive(Parser, Debug)]
@@ -16,7 +16,7 @@ use clap::Parser;
 struct Args {
     // Set a custom config file
     #[arg(short, long)]
-    config: Option<String>
+    config: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -35,6 +35,8 @@ struct RecordConfig {
     ttl: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     interface: Option<String>,
+    #[serde(default = "default_false")]
+    use_cn_dns: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -89,6 +91,10 @@ struct ErrResponse {
     message: String,
 }
 
+fn default_false() -> bool {
+    false
+}
+
 async fn get_v4_ip() -> Result<String, Box<dyn Error>> {
     let res = reqwest::get("https://ipv4.whatismyip.akamai.com/")
         .await?
@@ -99,7 +105,6 @@ async fn get_v4_ip() -> Result<String, Box<dyn Error>> {
 
 #[cfg(any(target_os = "android", target_os = "fuchsia", target_os = "linux"))]
 async fn get_v4_ip_with_interface(interface: &Option<String>) -> Result<String, Box<dyn Error>> {
-        
     let client = reqwest::Client::builder()
         .interface(interface.as_ref().map(|s| s.as_str()).unwrap())
         .build()
@@ -141,15 +146,20 @@ async fn get_record_resolved_ip(
     name: &str,
     domain: &str,
     is_v4: bool,
+    is_cn: bool,
 ) -> Result<Vec<IpAddr>, Box<dyn Error>> {
     let domain_to_resolve = format!("{}.{}", name, domain);
     let ali_ip = IpAddr::V4(Ipv4Addr::new(223, 5, 5, 5));
 
     let ali_dns = NameServerConfigGroup::from_ips_clear(&[ali_ip], 53, true);
-    let resolver = TokioAsyncResolver::tokio(
-        ResolverConfig::from_parts(None, vec![], ali_dns),
-        ResolverOpts::default(),
-    );
+    let resolver = if is_cn {
+        TokioAsyncResolver::tokio(
+            ResolverConfig::from_parts(None, vec![], ali_dns),
+            ResolverOpts::default(),
+        )
+    } else {
+        TokioAsyncResolver::tokio(ResolverConfig::cloudflare(), ResolverOpts::default())
+    };
 
     if is_v4 {
         let res = resolver.ipv4_lookup(domain_to_resolve).await?;
@@ -199,7 +209,6 @@ async fn get_records(token: &str, domain: &str, name: &str, type_: &str) -> Resp
         .send()
         .await
         .unwrap()
-
 }
 
 async fn update_record(id: u64, domain: &str, data: RecordUpdateBody, token: &str) -> Response {
@@ -222,8 +231,13 @@ async fn update_record(id: u64, domain: &str, data: RecordUpdateBody, token: &st
         .unwrap()
 }
 
-async fn check_ip(name: &str, domain: &str, is_v4: bool) -> Result<bool, Box<dyn Error>> {
-    let record_ips = get_record_resolved_ip(name, domain, is_v4).await?;
+async fn check_ip(
+    name: &str,
+    domain: &str,
+    is_v4: bool,
+    is_cn: bool,
+) -> Result<bool, Box<dyn Error>> {
+    let record_ips = get_record_resolved_ip(name, domain, is_v4, is_cn).await?;
     let current_ip = if is_v4 {
         get_v4_ip().await?
     } else {
@@ -243,7 +257,6 @@ async fn check_ip(name: &str, domain: &str, is_v4: bool) -> Result<bool, Box<dyn
 
 #[tokio::main]
 async fn main() {
-
     let args = Args::parse();
 
     // if args.config.is_none() {
@@ -254,7 +267,6 @@ async fn main() {
         panic!("Config file not found");
     }
 
-    
     let config: Config = toml::from_str(&std::fs::read_to_string(config_file).unwrap()).unwrap();
     for (name, record) in config.records.iter() {
         println!("Updating record: {}", name);
@@ -262,14 +274,13 @@ async fn main() {
             .await
             .unwrap();
         if record.type_ == "A" {
-
             let mut v4_ip: Option<String> = None;
             if let Some(ref _interface) = &record.interface {
                 if cfg!(any(
                     target_os = "android",
                     target_os = "fuchsia",
                     target_os = "linux",
-                )) {   
+                )) {
                     #[cfg(any(target_os = "android", target_os = "fuchsia", target_os = "linux"))]
                     {
                         v4_ip = Some(get_v4_ip_with_interface(&record.interface).await.unwrap());
@@ -280,7 +291,6 @@ async fn main() {
             } else {
                 v4_ip = Some(get_v4_ip().await.unwrap());
             }
-
 
             let data = RecordUpdateBody {
                 type_: record.type_.clone(),
@@ -293,7 +303,9 @@ async fn main() {
                 flags: None,
                 tag: None,
             };
-            let is_same_ip = check_ip(&record.name, &record.domain, true).await.unwrap();
+            let is_same_ip = check_ip(&record.name, &record.domain, true, record.use_cn_dns)
+                .await
+                .unwrap();
             if !is_same_ip {
                 let res = update_record(record_id, &record.domain, data, &config.token).await;
                 if res.status().is_success() {
@@ -312,7 +324,7 @@ async fn main() {
                     target_os = "android",
                     target_os = "fuchsia",
                     target_os = "linux",
-                )) {   
+                )) {
                     #[cfg(any(target_os = "android", target_os = "fuchsia", target_os = "linux"))]
                     {
                         v6_ip = Some(get_v6_ip_with_interface(&record.interface).await.unwrap());
@@ -335,7 +347,9 @@ async fn main() {
                 flags: None,
                 tag: None,
             };
-            let is_same_ip = check_ip(&record.name, &record.domain, false).await.unwrap();
+            let is_same_ip = check_ip(&record.name, &record.domain, false, record.use_cn_dns)
+                .await
+                .unwrap();
             if !is_same_ip {
                 let res = update_record(record_id, &record.domain, data, &config.token).await;
                 if res.status().is_success() {
