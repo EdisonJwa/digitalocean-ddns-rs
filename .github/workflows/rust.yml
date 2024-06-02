@@ -119,10 +119,10 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        files: release-${{ matrix.target }}/*
-        prerelease: ${{ steps.set_release_type.outputs.release_type == 'prerelease' }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: release-${{ matrix.target }}/*
+          prerelease: ${{ steps.set_release_type.outputs.release_type == 'prerelease' }}
           
   build-windows:
     runs-on: windows-latest
