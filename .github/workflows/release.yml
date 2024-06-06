@@ -41,17 +41,17 @@ jobs:
         run: |
           mkdir -p release-${{ matrix.target }}
           cd release-${{ matrix.target }}
-          tar -C ../target/${{ matrix.target }}/release -zcf realm-${{ matrix.target }}.tar.gz realm
+          tar -C ../target/${{ matrix.target }}/release -zcf digitalocean-ddns-rs-${{ matrix.target }}.tar.gz digitalocean-ddns-rs
       - name: pack windows binary
         if: "contains(matrix.target, 'windows')"
         run: |
           mkdir -p release-${{ matrix.target }}
           cd release-${{ matrix.target }}
-          tar -C ../target/${{ matrix.target }}/release -zcf realm-${{ matrix.target }}.tar.gz realm.exe
+          tar -C ../target/${{ matrix.target }}/release -zcf digitalocean-ddns-rs-${{ matrix.target }}.tar.gz digitalocean-ddns-rs.exe
       - name: add signature
         run: |
           cd release-${{ matrix.target }}
-          sha256sum realm-${{ matrix.target }}.tar.gz > realm-${{ matrix.target }}.sha256
+          sha256sum digitalocean-ddns-rs-${{ matrix.target }}.tar.gz > digitalocean-ddns-rs-${{ matrix.target }}.sha256
       - name: release
         uses: softprops/action-gh-release@v1
         env:
@@ -77,8 +77,8 @@ jobs:
         run: |
           mkdir -p release-${{ matrix.target }}
           cd release-${{ matrix.target }}
-          tar -C ../target/${{ matrix.target }}/release/ -zcf realm-${{ matrix.target }}.tar.gz realm.exe
-          openssl dgst -sha256 -r realm-${{ matrix.target }}.tar.gz > realm-${{ matrix.target }}.sha256
+          tar -C ../target/${{ matrix.target }}/release/ -zcf digitalocean-ddns-rs-${{ matrix.target }}.tar.gz digitalocean-ddns-rs.exe
+          openssl dgst -sha256 -r digitalocean-ddns-rs-${{ matrix.target }}.tar.gz > digitalocean-ddns-rs-${{ matrix.target }}.sha256
       - name: release
         uses: softprops/action-gh-release@v1
         env:
@@ -106,8 +106,8 @@ jobs:
         run: |
           mkdir -p release-${{ matrix.target }}
           cd release-${{ matrix.target }}
-          tar -C ../target/${{ matrix.target }}/release/ -zcf realm-${{ matrix.target }}.tar.gz realm
-          shasum -a 256 realm-${{ matrix.target }}.tar.gz > realm-${{ matrix.target }}.sha256
+          tar -C ../target/${{ matrix.target }}/release/ -zcf digitalocean-ddns-rs-${{ matrix.target }}.tar.gz digitalocean-ddns-rs
+          shasum -a 256 digitalocean-ddns-rs-${{ matrix.target }}.tar.gz > digitalocean-ddns-rs-${{ matrix.target }}.sha256
       - name: release
         uses: softprops/action-gh-release@v1
         env:
