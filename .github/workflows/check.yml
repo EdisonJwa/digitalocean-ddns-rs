@@ -1,0 +1,38 @@
+name: Build Check
+on:
+  push:
+    paths-ignore: ["**.md"]
+    branches: [ master ]
+  pull_request:
+    paths-ignore: ["**.md"]
+    branches: [ master ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: stable
+        components: rustfmt, clippy
+    - name: Install Requirements
+      run: sudo apt-get update && sudo apt-get install -y build-essential musl-tools pkg-config libssl-dev
+    - run: cargo clippy
+    - name: Run tests
+      run: cargo test --verbose
+    - name: test binary
+      run: cargo test -v --no-fail-fast
+    - name: Cache cargo dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
