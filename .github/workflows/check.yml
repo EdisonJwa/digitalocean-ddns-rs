@@ -14,20 +14,12 @@ jobs:
   build-check:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: dtolnay/rust-toolchain@master
+    - uses: actions/checkout@v7
+    - uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: stable
         components: rustfmt, clippy
-    - name: Install Requirements
-      run: sudo apt-get update && sudo apt-get install -y build-essential musl-tools pkg-config libssl-dev
-    - run: cargo clippy
-    - name: Run tests
-      run: cargo test --verbose
-    - name: test binary
-      run: cargo test -v --no-fail-fast
     - name: Cache cargo dependencies
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: |
           ~/.cargo/bin/
@@ -36,6 +28,11 @@ jobs:
           ~/.cargo/git/db/
           target/
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    - name: Check formatting
+      run: cargo fmt --check
+    - run: cargo clippy -- -D warnings
+    - name: Run tests
+      run: cargo test --verbose
 
 
 
@@ -61,28 +58,24 @@ jobs:
           - armv7-unknown-linux-musleabi
           - armv7-unknown-linux-musleabihf
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: install toolchain
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@stable
         with:
-            toolchain: stable
             targets: ${{ matrix.target }}
       - name: install cross
-        run: cargo install cross --git https://github.com/cross-rs/cross
-      - name: Install Requirements
-        if: "!contains(matrix.target, 'windows')"
-        run: sudo apt-get update && sudo apt-get install -y build-essential musl-tools pkg-config libssl-dev
+        run: cargo install cross --locked
       - name: compile
         run: cross build --release --target=${{ matrix.target }}
       - name: upload unix binary
         if: "!contains(matrix.target, 'windows')"
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: digitalocean-ddns-rs-${{ matrix.target }}
           path: target/${{ matrix.target }}/release/digitalocean-ddns-rs
       - name: upload windows binary
         if: "contains(matrix.target, 'windows')"
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: digitalocean-ddns-rs-${{ matrix.target }}
           path: target/${{ matrix.target }}/release/digitalocean-ddns-rs.exe
@@ -111,16 +104,15 @@ jobs:
         target:
           - x86_64-pc-windows-msvc
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: install toolchain
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@stable
         with:
-            toolchain: nightly
             targets: ${{ matrix.target }}
       - name: compile
         run: cargo build --release --target=${{ matrix.target }}
       - name: upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: digitalocean-ddns-rs-${{ matrix.target }}
           path: target/${{ matrix.target }}/release/digitalocean-ddns-rs.exe
@@ -141,16 +133,15 @@ jobs:
           - aarch64-apple-darwin
           - aarch64-apple-ios
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: install toolchain
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@stable
         with:
-            toolchain: nightly
             targets: ${{ matrix.target }}
       - name: compile
         run: cargo build --release --target=${{ matrix.target }}
       - name: upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: digitalocean-ddns-rs-${{ matrix.target }}
           path: target/${{ matrix.target }}/release/digitalocean-ddns-rs

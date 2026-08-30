@@ -26,14 +26,13 @@ jobs:
           - armv7-unknown-linux-musleabi
           - armv7-unknown-linux-musleabihf
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: install toolchain
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@stable
         with:
-            toolchain: nightly
             targets: ${{ matrix.target }}
       - name: install cross
-        run: cargo install cross --git https://github.com/cross-rs/cross
+        run: cargo install cross --locked
       - name: compile
         run: cross build --release --target=${{ matrix.target }}
       - name: pack unix binary
@@ -53,7 +52,7 @@ jobs:
           cd release-${{ matrix.target }}
           sha256sum digitalocean-ddns-rs-${{ matrix.target }}.tar.gz > digitalocean-ddns-rs-${{ matrix.target }}.sha256
       - name: release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -65,11 +64,10 @@ jobs:
         target:
           - x86_64-pc-windows-msvc
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: install toolchain
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@stable
         with:
-            toolchain: nightly
             targets: ${{ matrix.target }}
       - name: compile
         run: cargo build --release --target=${{ matrix.target }}
@@ -80,7 +78,7 @@ jobs:
           tar -C ../target/${{ matrix.target }}/release/ -zcf digitalocean-ddns-rs-${{ matrix.target }}.tar.gz digitalocean-ddns-rs.exe
           openssl dgst -sha256 -r digitalocean-ddns-rs-${{ matrix.target }}.tar.gz > digitalocean-ddns-rs-${{ matrix.target }}.sha256
       - name: release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -94,11 +92,10 @@ jobs:
           - aarch64-apple-darwin
           - aarch64-apple-ios
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: install toolchain
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@stable
         with:
-            toolchain: nightly
             targets: ${{ matrix.target }}
       - name: compile
         run: cargo build --release --target=${{ matrix.target }}
@@ -109,7 +106,7 @@ jobs:
           tar -C ../target/${{ matrix.target }}/release/ -zcf digitalocean-ddns-rs-${{ matrix.target }}.tar.gz digitalocean-ddns-rs
           shasum -a 256 digitalocean-ddns-rs-${{ matrix.target }}.tar.gz > digitalocean-ddns-rs-${{ matrix.target }}.sha256
       - name: release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
