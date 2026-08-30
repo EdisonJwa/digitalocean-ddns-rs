@@ -32,7 +32,10 @@ jobs:
         with:
             targets: ${{ matrix.target }}
       - name: install cross
-        run: cargo install cross --locked
+        # 0.2.5 (latest crates.io release, 2023) ships old Docker images whose
+        # NDK lacks libunwind and mingw lacks GetHostNameW, breaking modern
+        # rustc. git master carries the maintained images.
+        run: cargo install cross --git https://github.com/cross-rs/cross --locked
       - name: compile
         run: cross build --release --target=${{ matrix.target }}
       - name: pack unix binary
